@@ -15,10 +15,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import path
 from recs import views
 
+
+def test(request):
+    print("TEST HIT")
+    return JsonResponse({"ok": True})
+
+
 urlpatterns = [
+    path('test/', test),
     path('admin/', admin.site.urls),
     path('', views.index, name='index'),
     path('register/', views.register_view, name='register'),
