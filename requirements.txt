@@ -4,3 +4,4 @@ joblib
 rapidfuzz
 scikit-learn
 pandas
+whitenoise
