@@ -152,6 +152,11 @@ def recommend(request):
             user_db_ratings = {ur.movie.title: ur.rating for ur in request.user.ratings.all()}
             print("DB RATINGS:", user_db_ratings)
             engine = get_engine()
+
+
+
+            
+            return JsonResponse({"ok": True})
             recs = engine.get_user_recommendations(user_db_ratings, n_rec=5)
             
             result = {title: float(score) for title, score in recs.items()}
