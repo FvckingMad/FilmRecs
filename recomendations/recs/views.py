@@ -17,16 +17,16 @@ from recommender import RecommenderEngine
 from .models import Movie, UserRating
 
 # Автоматические миграции при старте
-try:
-    execute_from_command_line(['manage.py', 'migrate', '--run-syncdb'])
-except Exception:
-    pass
+#try:
+#    execute_from_command_line(['manage.py', 'migrate', '--run-syncdb'])
+#except Exception:
+#    pass
 
 # Создание суперпользователя из переменных окружения
-ADMIN_USER = os.environ.get('ADMIN_USER')
-ADMIN_PASS = os.environ.get('ADMIN_PASS')
-if ADMIN_USER and ADMIN_PASS:
-    User.objects.create_superuser(ADMIN_USER, '', ADMIN_PASS)
+#ADMIN_USER = os.environ.get('ADMIN_USER')
+#ADMIN_PASS = os.environ.get('ADMIN_PASS')
+#if ADMIN_USER and ADMIN_PASS:
+#    User.objects.create_superuser(ADMIN_USER, '', ADMIN_PASS)
 
 
 # Глобальный экземпляр движка
