@@ -30,18 +30,49 @@ from .models import Movie, UserRating
 
 
 # Глобальный экземпляр движка
-_engine = None
+#_engine = None
+#
+#
+#def get_engine():
+#    global _engine
+#    if _engine is None:
+#        _engine = RecommenderEngine()
+#        # Путь к data/ml-latest-small относительно корневой папки проекта
+#        project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+#        base_path = os.path.join(project_root, 'data', 'ml-latest-small')
+#        _engine.fit(base_path)
+#    return _engine
+#
 
+
+
+
+
+
+_engine = None
 
 def get_engine():
     global _engine
     if _engine is None:
         _engine = RecommenderEngine()
-        # Путь к data/ml-latest-small относительно корневой папки проекта
+
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         base_path = os.path.join(project_root, 'data', 'ml-latest-small')
+
+        print("Loading ML model...")  # важно для логов
         _engine.fit(base_path)
+        print("ML model loaded")
+
     return _engine
+
+
+
+
+
+
+
+
+
 
 
 class RegisterForm(forms.Form):
@@ -155,7 +186,7 @@ def recommend(request):
 
 
 
-            
+
             return JsonResponse({"ok": True})
             recs = engine.get_user_recommendations(user_db_ratings, n_rec=5)
             
