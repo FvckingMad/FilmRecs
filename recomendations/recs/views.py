@@ -25,9 +25,8 @@ except Exception:
 # Создание суперпользователя из переменных окружения
 ADMIN_USER = os.environ.get('ADMIN_USER')
 ADMIN_PASS = os.environ.get('ADMIN_PASS')
-#if ADMIN_USER and ADMIN_PASS:
-#    if not User.objects.filter(username=ADMIN_USER).exists():
-#        User.objects.create_superuser(ADMIN_USER, '', ADMIN_PASS)
+if ADMIN_USER and ADMIN_PASS:
+    User.objects.create_superuser(ADMIN_USER, '', ADMIN_PASS)
 
 
 # Глобальный экземпляр движка
