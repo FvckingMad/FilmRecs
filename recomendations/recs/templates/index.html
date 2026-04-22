@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Film Recommender</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        h1 { color: #333; }
+        .movie-input { margin: 10px 0; display: flex; gap: 10px; position: relative; }
+        input { padding: 8px; flex: 1; }
+        button { padding: 8px 16px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #results { margin-top: 20px; }
+        .rec-item { padding: 10px; margin: 5px 0; background: #f0f0f0; border-radius: 4px; }
+        .user-info { margin-bottom: 20px; padding: 10px; background: #e9ecef; border-radius: 4px; }
+        .user-info a { margin-left: 10px; }
+        .autocomplete-list { position: absolute; top: 100%; left: 0; right: 60px; background: white; border: 1px solid #ccc; max-height: 200px; overflow-y: auto; z-index: 1000; }
+        .autocomplete-item { padding: 8px; cursor: pointer; }
+        .autocomplete-item:hover { background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>Рекомендации фильмов</h1>
+    
+    {% if user.is_authenticated %}
+        <div class="user-info">
+            Привет, {{ user.username }}! 
+            <a href="{% url 'logout' %}">Выйти</a>
+        </div>
+    {% else %}
+        <div class="user-info">
+            <a href="{% url 'login' %}">Войти</a>
+            <a href="{% url 'register' %}">Регистрация</a>
+        </div>
+    {% endif %}
+    
+    <p>Введите оценки для фильмов (оценка от 1 до 5):</p>
+    
+    <div id="inputs">
+        <div class="movie-input">
+            <input type="text" placeholder="Название фильма" class="movie-name" oninput="searchMovies(this)">
+            <input type="number" placeholder="Оценка" min="1" max="5" step="0.5" class="movie-rating">
+        </div>
+    </div>
+    
+    <button onclick="addInput()">+ Добавить фильм</button>
+    <button onclick="getRecommendations()">Получить рекомендации</button>
+    
+    <div id="results"></div>
+
+    <script>
+        // Загружаем сохранённые оценки пользователя
+        const userRatings = {{ user_ratings|safe }};
+        
+        // Заполняем inputs при загрузке
+        window.onload = function() {
+            const entries = Object.entries(userRatings);
+            if (entries.length > 0) {
+                const inputsDiv = document.getElementById('inputs');
+                entries.forEach(([title, rating]) => {
+                    const div = document.createElement('div');
+                    div.className = 'movie-input';
+                    div.innerHTML = `<input type="text" placeholder="Название фильма" class="movie-name" value="${title}" oninput="searchMovies(this)"><input type="number" placeholder="Оценка" min="1" max="5" step="0.5" class="movie-rating" value="${rating}">`;
+                    inputsDiv.appendChild(div);
+                });
+            }
+        };
+
+        function addInput() {
+            const div = document.createElement('div');
+            div.className = 'movie-input';
+            div.innerHTML = '<input type="text" placeholder="Название фильма" class="movie-name" oninput="searchMovies(this)"><input type="number" placeholder="Оценка" min="1" max="5" step="0.5" class="movie-rating">';
+            document.getElementById('inputs').appendChild(div);
+        }
+
+        let searchTimeout;
+        function searchMovies(input) {
+            clearTimeout(searchTimeout);
+            const query = input.value;
+            const container = input.parentElement;
+            
+            // Удаляем старые подсказки
+            const oldList = container.querySelector('.autocomplete-list');
+            if (oldList) oldList.remove();
+            
+            if (query.length < 2) return;
+            
+            searchTimeout = setTimeout(async () => {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.movies && data.movies.length > 0) {
+                    const list = document.createElement('div');
+                    list.className = 'autocomplete-list';
+                    data.movies.forEach(movie => {
+                        const item = document.createElement('div');
+                        item.className = 'autocomplete-item';
+                        item.textContent = movie.title;
+                        item.onclick = () => {
+                            input.value = movie.title;
+                            list.remove();
+                        };
+                        list.appendChild(item);
+                    });
+                    container.appendChild(list);
+                }
+            }, 300);
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        async function getRecommendations() {
+            const names = document.querySelectorAll('.movie-name');
+            const ratings = document.querySelectorAll('.movie-rating');
+            const data = {};
+            
+            for (let i = 0; i < names.length; i++) {
+                if (names[i].value && ratings[i].value) {
+                    data[names[i].value] = parseFloat(ratings[i].value);
+                }
+            }
+
+            const response = await fetch('/api/recommend', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+                body: JSON.stringify({ratings: data})
+            });
+
+            const result = await response.json();
+            const resultsDiv = document.getElementById('results');
+            
+            if (result.recommendations) {
+                resultsDiv.innerHTML = '<h3>Рекомендации:</h3>' + 
+                    Object.entries(result.recommendations).map(([title, score]) => 
+                        `<div class="rec-item">${title} — ${score.toFixed(2)}</div>`
+                    ).join('');
+            } else if (result.error) {
+                resultsDiv.innerHTML = `<p style="color:red">Ошибка: ${result.error}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
