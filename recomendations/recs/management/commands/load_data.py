@@ -3,6 +3,9 @@ import os
 from django.core.management.base import BaseCommand
 from recs.models import Movie, UserRating
 
+from django.contrib.auth.models import User
+
+system_user, _ = User.objects.get_or_create(username="system")
 
 class Command(BaseCommand):
     help = 'Load movies and ratings from MovieLens dataset'
@@ -41,7 +44,8 @@ class Command(BaseCommand):
                 movie = Movie.objects.filter(movie_id=int(row['movieId'])).first()
                 if movie:
                     ratings_batch.append(UserRating(
-                        user_id=int(row['userId']),
+                        #user_id=int(row['userId']),
+                        user=system_user,
                         movie=movie,
                         rating=float(row['rating']),
                         timestamp=int(row['timestamp'])
