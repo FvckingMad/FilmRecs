@@ -9,11 +9,25 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django import forms
+from django.core.management import execute_from_command_line
 
 # Добавляем корневую папку проекта в путь
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from recommender import RecommenderEngine
 from .models import Movie, UserRating
+
+# Автоматические миграции при старте
+try:
+    execute_from_command_line(['manage.py', 'migrate', '--run-syncdb'])
+except Exception:
+    pass
+
+# Создание суперпользователя из переменных окружения
+ADMIN_USER = os.environ.get('ADMIN_USER')
+ADMIN_PASS = os.environ.get('ADMIN_PASS')
+if ADMIN_USER and ADMIN_PASS:
+    if not User.objects.filter(username=ADMIN_USER).exists():
+        User.objects.create_superuser(ADMIN_USER, '', ADMIN_PASS)
 
 
 # Глобальный экземпляр движка
