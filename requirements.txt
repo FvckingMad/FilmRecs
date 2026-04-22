@@ -5,3 +5,5 @@ rapidfuzz
 scikit-learn
 pandas
 whitenoise
+psycopg2-binary
+dj-database-url>=2.1.0
