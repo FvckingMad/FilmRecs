@@ -133,10 +133,11 @@ def search_movies(request):
 @csrf_exempt
 def recommend(request):
     if request.method == 'POST':
+        print("RECOMMEND CALLED")
         try:
             data = json.loads(request.body)
             ratings = data.get('ratings', {})
-            
+            print("RATINGS FROM FRONT:", ratings)
             # Сохраняем оценки пользователя
             for title, rating in ratings.items():
                 movie = Movie.objects.filter(title__icontains=title).first()
@@ -149,13 +150,14 @@ def recommend(request):
             
             # Получаем оценки пользователя из БД для рекомендаций
             user_db_ratings = {ur.movie.title: ur.rating for ur in request.user.ratings.all()}
-            
+            print("DB RATINGS:", user_db_ratings)
             engine = get_engine()
             recs = engine.get_user_recommendations(user_db_ratings, n_rec=5)
             
             result = {title: float(score) for title, score in recs.items()}
             return JsonResponse({'recommendations': result})
         except Exception as e:
+            print("ERROR:", e)
             return JsonResponse({'error': str(e)}, status=400)
     
     return JsonResponse({'error': 'Use POST method'}, status=405)
