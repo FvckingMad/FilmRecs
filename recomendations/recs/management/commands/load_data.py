@@ -1,7 +1,7 @@
 import csv
 import os
 from django.core.management.base import BaseCommand
-from recs.models import Movie, Rating
+from recs.models import Movie, UserRating
 
 
 class Command(BaseCommand):
@@ -40,7 +40,7 @@ class Command(BaseCommand):
             for row in reader:
                 movie = Movie.objects.filter(movie_id=int(row['movieId'])).first()
                 if movie:
-                    ratings_batch.append(Rating(
+                    ratings_batch.append(UserRating(
                         user_id=int(row['userId']),
                         movie=movie,
                         rating=float(row['rating']),
@@ -49,10 +49,10 @@ class Command(BaseCommand):
                     ratings_count += 1
                 
                 if len(ratings_batch) >= batch_size:
-                    Rating.objects.bulk_create(ratings_batch)
+                    UserRating.objects.bulk_create(ratings_batch)
                     ratings_batch = []
         
         if ratings_batch:
-            Rating.objects.bulk_create(ratings_batch)
+            UserRating.objects.bulk_create(ratings_batch)
         
         self.stdout.write(self.style.SUCCESS(f'Loaded {ratings_count} ratings'))
