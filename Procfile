@@ -1,1 +1,1 @@
-web: gunicorn recomendations.wsgi:application --bind 0.0.0.0:$PORT
+web: gunicorn recomendations.recomendations.wsgi:application --bind 0.0.0.0:$PORT
