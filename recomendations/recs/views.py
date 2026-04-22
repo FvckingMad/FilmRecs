@@ -55,14 +55,7 @@ def get_engine():
     global _engine
     if _engine is None:
         _engine = RecommenderEngine()
-
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        base_path = os.path.join(project_root, 'data', 'ml-latest-small')
-
-        print("Loading ML model...")  # важно для логов
-        _engine.fit(base_path)
-        print("ML model loaded")
-
+        print("ML INIT (NO FIT)")
     return _engine
 
 
@@ -160,40 +153,67 @@ def search_movies(request):
     return JsonResponse({'movies': [{'id': m.movie_id, 'title': m.title} for m in movies]})
 
 
+
+
+
+
 @login_required
 @csrf_exempt
 def recommend(request):
-    if request.method == 'POST':
-        print("RECOMMEND CALLED")
-        try:
-            data = json.loads(request.body)
-            ratings = data.get('ratings', {})
-            print("RATINGS FROM FRONT:", ratings)
-            # Сохраняем оценки пользователя
-            for title, rating in ratings.items():
-                movie = Movie.objects.filter(title__icontains=title).first()
-                if movie:
-                    UserRating.objects.update_or_create(
-                        user=request.user,
-                        movie=movie,
-                        defaults={'rating': float(rating), 'timestamp': int(time.time())}
-                    )
-            
-            # Получаем оценки пользователя из БД для рекомендаций
-            user_db_ratings = {ur.movie.title: ur.rating for ur in request.user.ratings.all()}
-            print("DB RATINGS:", user_db_ratings)
-            engine = get_engine()
+    print("RECOMMEND HIT")
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Use POST'}, status=405)
+
+    return JsonResponse({
+        "recommendations": {
+            "Test Movie": 4.5,
+            "Movie B": 4.2
+        }
+    })
 
 
 
 
-            #return JsonResponse({"ok": True})
-            recs = engine.get_user_recommendations(user_db_ratings, n_rec=5)
-            
-            result = {title: float(score) for title, score in recs.items()}
-            return JsonResponse({'recommendations': result})
-        except Exception as e:
-            print("ERROR:", e)
-            return JsonResponse({'error': str(e)}, status=400)
-    
-    return JsonResponse({'error': 'Use POST method'}, status=405)
+
+
+
+
+#@login_required
+#@csrf_exempt
+#def recommend(request):
+#    if request.method == 'POST':
+#        print("RECOMMEND CALLED")
+#        try:
+#            data = json.loads(request.body)
+#            ratings = data.get('ratings', {})
+#            print("RATINGS FROM FRONT:", ratings)
+#            # Сохраняем оценки пользователя
+#            for title, rating in ratings.items():
+#                movie = Movie.objects.filter(title__icontains=title).first()
+#                if movie:
+#                    UserRating.objects.update_or_create(
+#                        user=request.user,
+#                        movie=movie,
+#                        defaults={'rating': float(rating), 'timestamp': int(time.time())}
+#                    )
+#            
+#            # Получаем оценки пользователя из БД для рекомендаций
+#            user_db_ratings = {ur.movie.title: ur.rating for ur in request.user.ratings.all()}
+#            print("DB RATINGS:", user_db_ratings)
+#            engine = get_engine()
+#
+#
+#
+#
+#            #return JsonResponse({"ok": True})
+#            recs = engine.get_user_recommendations(user_db_ratings, n_rec=5)
+#            
+#            result = {title: float(score) for title, score in recs.items()}
+#            return JsonResponse({'recommendations': result})
+#        except Exception as e:
+#            print("ERROR:", e)
+#            return JsonResponse({'error': str(e)}, status=400)
+#    
+#    return JsonResponse({'error': 'Use POST method'}, status=405)
+#
