@@ -187,7 +187,7 @@ def recommend(request):
 
 
 
-            return JsonResponse({"ok": True})
+            #return JsonResponse({"ok": True})
             recs = engine.get_user_recommendations(user_db_ratings, n_rec=5)
             
             result = {title: float(score) for title, score in recs.items()}
